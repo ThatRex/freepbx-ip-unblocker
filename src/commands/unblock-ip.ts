@@ -2,10 +2,10 @@ import { exec } from 'child_process'
 import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js'
 import {
     Discord,
-    SimpleCommand,
-    SimpleCommandMessage,
-    SimpleCommandOption,
-    SimpleCommandOptionType,
+    // SimpleCommand,
+    // SimpleCommandMessage,
+    // SimpleCommandOption,
+    // SimpleCommandOptionType,
     Slash,
     SlashOption
 } from 'discordx'
@@ -54,38 +54,38 @@ export class UnblockIP {
         })
     }
 
-    @SimpleCommand({ name: 'unblock', description: 'Unblock your IP on the PBX.' })
-    async simpleUnblock(
-        @SimpleCommandOption({
-            name: 'ip',
-            description: 'your public ipv4 address',
-            type: SimpleCommandOptionType.String
-        })
-        ip: string | undefined,
+    // @SimpleCommand({ name: 'unblock', description: 'Unblock your IP on the PBX.' })
+    // async simpleUnblock(
+    //     @SimpleCommandOption({
+    //         name: 'ip',
+    //         description: 'your public ipv4 address',
+    //         type: SimpleCommandOptionType.String
+    //     })
+    //     ip: string | undefined,
 
-        command: SimpleCommandMessage
-    ) {
-        if (!command.isValid()) return command.sendUsageSyntax()
+    //     command: SimpleCommandMessage
+    // ) {
+    //     if (!command.isValid()) return command.sendUsageSyntax()
 
-        const message = await (async () => {
-            if (!ip!.match(ipRegex)) {
-                return command.message.reply(
-                    'Please provide a valid IPv4 Address. (Example: 541.241.104.65)'
-                )
-            }
+    //     const message = await (async () => {
+    //         if (!ip!.match(ipRegex)) {
+    //             return command.message.reply(
+    //                 'Please provide a valid IPv4 Address. (Example: 541.241.104.65)'
+    //             )
+    //         }
 
-            // const { stdout, stderr } = await exec(`fwconsole firewall trust ${ip}`)
+    //         const { stdout, stderr } = await exec(`fwconsole firewall trust ${ip}`)
 
-            // console.debug(`[IP Unblock] stdout: ${stdout}`)
+    //         console.debug(`[IP Unblock] stdout: ${stdout}`)
 
-            // if (stderr) {
-            //     return command.message.reply('Something when wrong. Error: `' + stderr + '`')
-            // }
+    //         if (stderr) {
+    //             return command.message.reply('Something when wrong. Error: `' + stderr + '`')
+    //         }
 
-            return command.message.reply('Your IP has been unblocked!')
-        })()
+    //         return command.message.reply('Your IP has been unblocked!')
+    //     })()
 
-        await command.message.delete()
-        setTimeout(async () => await message.delete(), 4000)
-    }
+    //     await command.message.delete()
+    //     setTimeout(async () => await message.delete(), 4000)
+    // }
 }
