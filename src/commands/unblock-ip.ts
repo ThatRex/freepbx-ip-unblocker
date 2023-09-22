@@ -32,13 +32,13 @@ export class UnblockIP {
         exec(`fwconsole firewall trust ${ip}`, (error) => {
             if (error) {
                 interaction.reply({
-                    content: 'Something when wrong. Error: `' + error + '`',
+                    content: 'Something when wrong. Error: `' + error + '`.',
                     ephemeral: true
                 })
                 return
             }
             interaction.reply({
-                content: 'Your IP has been unblocked',
+                content: 'Your IP has been unblocked.',
                 ephemeral: true
             })
         })
