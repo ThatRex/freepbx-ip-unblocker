@@ -16,8 +16,7 @@
     "dependencies": {
         "@discordx/importer": "^1.2.2",
         "discord.js": "^14.11.0",
-        "discordx": "^11.7.6",
-        "dotenv": "^16.0.3"
+        "discordx": "^11.7.6"
     },
     "devDependencies": {
         "@types/node": "^20.2.4",

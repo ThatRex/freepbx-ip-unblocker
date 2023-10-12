@@ -2,7 +2,7 @@ import { exec } from 'child_process'
 import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js'
 import { Discord, Slash, SlashOption } from 'discordx'
 
-const ipRegex =
+const IPV4_REGEX =
     /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
 
 @Discord()
@@ -22,7 +22,7 @@ export class UnblockIP {
 
         interaction: CommandInteraction
     ) {
-        if (!ip.match(ipRegex)) {
+        if (!ip.match(IPV4_REGEX)) {
             return interaction.reply({
                 content: 'Please provide a valid IPv4 Address. (Example: 541.241.104.65)',
                 ephemeral: true
