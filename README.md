@@ -28,7 +28,3 @@
 11. Execute `systemctl daemon-reload`.
 12. Execute `systemctl start ip-unblock-bot && systemctl status ip-unblock-bot` and ensure no errors are encounterd before continuing.
 13. Execute `systemctl enable ip-unblock-bot` to enable the service.
-
-
-
-
