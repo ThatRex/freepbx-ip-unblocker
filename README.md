@@ -2,7 +2,7 @@
 
 ## Setup
 
-1. Install [NVM](https://git1hub.com/nvm-sh/nvm).
+1. Install [NVM](https://github.com/nvm-sh/nvm).
 2. Execute `nvm install 17`.
 3. Execute `cd /opt`.
 4. Execute `yum install git`.
