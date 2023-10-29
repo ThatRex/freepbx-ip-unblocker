@@ -6,7 +6,7 @@
 2. Execute `nvm install 17`.
 3. Execute `cd /opt`.
 4. Execute `yum install git`.
-5. Execute `git clone *this repo*`.
+5. Execute `git clone https://github.com/ThatRex/freepbx-ip-unblocker`.
 6. Execute `cd freepbx-ip-unblocker/`.
 7. Execute `npm i` to install dependencies.
 8. Execute `npx tsc` to build.
