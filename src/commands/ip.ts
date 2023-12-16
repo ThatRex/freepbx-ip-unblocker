@@ -1,33 +1,93 @@
 import { exec } from 'child_process'
-import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js'
-import { Discord, Slash, SlashGroup, SlashOption } from 'discordx'
+import { ApplicationCommandOptionType, CommandInteraction, GuildMember, User } from 'discord.js'
+import { Discord, Guard, Slash, SlashGroup, SlashOption } from 'discordx'
 import { IPV4_REGEX } from '../lib/regex'
 import util from 'util'
 import { db, schema } from '../lib/db'
-import { eq } from 'drizzle-orm'
+import { and, asc, eq, sql } from 'drizzle-orm'
+import { ErrorHandler } from '../guards/error-handler'
+import moment from 'moment'
 
 const execPromise = util.promisify(exec)
+
 const { ipLogs } = schema
 
+async function genHistory(interaction: CommandInteraction, user?: User) {
+    const queryBase = db
+        .select({
+            ip: ipLogs.ipv4,
+            note: ipLogs.note,
+            timestamp: ipLogs.timestamp,
+            timestamp_untrusted: ipLogs.timestamp_untrusted,
+            userId: ipLogs.discordUserID
+        })
+        .from(ipLogs)
+        .limit(100)
+        .orderBy(asc(ipLogs.timestamp))
+
+    const query = !user ? queryBase : queryBase.where(eq(ipLogs.discordUserID, user.id))
+
+    const records = await query
+
+    const maxLenIP = Math.max(...records.map(({ ip }) => ip.length))
+
+    let content = '# IP History\n```\n'
+    for (const { ip, note, timestamp, timestamp_untrusted, userId } of records) {
+        const a = ip.padEnd(maxLenIP, ' ')
+        const b = timestamp_untrusted ? 'Untrusted' : 'Trusted'
+        const c = moment(timestamp_untrusted ?? timestamp).format('YYYY-MM-DD HH:mm:ss')
+        const d = note ? ` - ${note}` : ''
+
+        content = content + `${a} : `
+
+        if (!user) {
+            const u = await interaction.client.users.fetch(userId)
+            content = content + `${u.username} `
+        }
+
+        content = content + `${b} @ ${c}${d}\n`
+    }
+    content = content + '\n```'
+
+    return content
+}
+
 @Discord()
+@Guard(ErrorHandler)
+@SlashGroup({ description: 'Staff IP Management', name: 'ip', root: 'staff' })
+@SlashGroup('ip', 'staff')
+class IPStaff {
+    @Slash({ name: 'list', description: 'View IP history.' })
+    async list(
+        @SlashOption({
+            description: 'User whos history to view',
+            name: 'user',
+            required: false,
+            type: ApplicationCommandOptionType.User
+        })
+        user: User,
+
+        interaction: CommandInteraction
+    ) {
+        const content = await genHistory(interaction, user)
+        await interaction.reply({
+            content,
+            ephemeral: true
+        })
+    }
+}
+
+@Discord()
+@Guard(ErrorHandler)
 @SlashGroup({ description: 'Manage IPs', name: 'ip' })
 @SlashGroup('ip')
 class IP {
     @Slash({ name: 'list', description: 'View your IP history.' })
     async list(interaction: CommandInteraction) {
-        const records = await db
-            .select({
-                ip: ipLogs.ipv4,
-                note: ipLogs.note,
-                timestamp: ipLogs.timestamp,
-                timestamp_untrusted: ipLogs.timestamp_untrusted
-            })
-            .from(ipLogs)
-            .where(eq(ipLogs.discordUserID, interaction.user.id))
-            .limit(10)
+        const content = await genHistory(interaction, interaction.user)
 
         await interaction.reply({
-            content: 'List Here',
+            content,
             ephemeral: true
         })
     }
@@ -59,57 +119,37 @@ class IP {
             return
         }
 
-        // Check IP
-
-        let error = ''
         let reject = false
         let rejectReason = ''
 
-        const canContinue = () => !reject && !error
-
-        try {
-            const output = await execPromise(`fwconsole firewall list trusted | grep ${ip}`)
-            if (output.stdout) {
-                reject = true
-                rejectReason = 'This IP is already trusted.'
-            }
-        } catch (error: any) {
-            error = error.message
+        const ipTrusted = await this.isTrustedIP(ip)
+        if (ipTrusted) {
+            reject = true
+            rejectReason = 'This IP is already trusted.'
         }
 
-        // if (canContinue() && env.IPINFO_TOKEN) {
+        // if (!reject && env.IPINFO_TOKEN) {
         // }
 
-        // if (canContinue() && env.ABUSEIPDB_KEY) {
+        // if (!reject && env.ABUSEIPDB_KEY) {
         // }
 
         if (reject) {
-            const content = `IP Rejected. Reason: ${rejectReason} `
-            await interaction.reply({ content, ephemeral: true })
+            await interaction.reply({
+                content: `IP Rejected. Reason: ${rejectReason}`,
+                ephemeral: true
+            })
             return
         }
 
-        if (!error) {
-            try {
-                await execPromise(`fwconsole firewall trust ${ip}`)
-            } catch (error: any) {
-                error = error.message
-            }
-        }
-
-        if (error) {
-            const content = 'Something went wrong. Error:\n```' + error + '```'
-            await interaction.reply({ content, ephemeral: true })
-            return
-        }
-
-        const content = 'Your IP has been trusted.'
-        await interaction.reply({ content, ephemeral: true })
+        await execPromise(`fwconsole firewall trust ${ip}`)
         await db.insert(ipLogs).values({
             discordUserID: interaction.user.id,
             ipv4: ip,
             note
         })
+
+        await interaction.reply({ content: 'Your IP has been trusted.', ephemeral: true })
     }
 
     @Slash({ name: 'untrust', description: 'Untrust an IP.' })
@@ -125,10 +165,41 @@ class IP {
         interaction: CommandInteraction
     ) {
         if (!ip.match(IPV4_REGEX)) {
-            const content =
-                'Please provide a valid IPv4 Address. [Get your IP here.](https://api.ipify.org/?format=txt)'
+            const content = 'Please provide a valid IPv4 Address.'
             await interaction.reply({ content, ephemeral: true })
             return
         }
+
+        const ipTrusted = await this.isTrustedIP(ip)
+        if (!ipTrusted) {
+            await interaction.reply({ content: 'This IP is not trusted.', ephemeral: true })
+            return
+        }
+
+        const records = await db
+            .select()
+            .from(ipLogs)
+            .where(and(eq(ipLogs.ipv4, ip), eq(ipLogs.discordUserID, interaction.user.id)))
+            .limit(1)
+
+        if (records.length) {
+            await execPromise(`fwconsole firewall untrust ${ip}`)
+            await db
+                .update(ipLogs)
+                .set({ timestamp_untrusted: sql`CURRENT_TIMESTAMP` })
+                .where(and(eq(ipLogs.ipv4, ip), eq(ipLogs.discordUserID, interaction.user.id)))
+            await interaction.reply({ content: 'Your IP has been untusted.', ephemeral: true })
+            return
+        }
+
+        await interaction.reply({
+            content: 'This IP is not associated with your account.',
+            ephemeral: true
+        })
+    }
+
+    private async isTrustedIP(ip: string) {
+        const output = await execPromise(`fwconsole firewall list trusted | grep ${ip}`)
+        return !!output.stdout
     }
 }

@@ -12,6 +12,7 @@
         "start": "node build/main.js",
         "watch": "nodemon --exec ts-node-esm src/main.ts",
         "format": "prettier --write --plugin-search-dir=. .",
+        "db:studio": "drizzle-kit studio",
         "db:migration:generate": "drizzle-kit generate:sqlite",
         "db:migration:run": "ts-node-esm src/lib/db/migrate.ts"
     },
@@ -22,6 +23,7 @@
         "discordx": "^11.9.0",
         "dotenv": "^16.3.1",
         "drizzle-orm": "^0.29.1",
+        "moment": "^2.29.4",
         "node-cron": "^3.0.3",
         "zod": "^3.22.4"
     },
@@ -33,7 +35,7 @@
         "nodemon": "^3.0.2",
         "prettier": "^3.1.1",
         "ts-node": "^10.9.2",
-        "typescript": "5.2.2"
+        "typescript": "^5.3.3"
     },
     "engines": {
         "node": ">=16.0.0",
