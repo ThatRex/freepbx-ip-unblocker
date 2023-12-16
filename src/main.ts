@@ -3,9 +3,11 @@ import { IntentsBitField, type Interaction } from 'discord.js'
 import { Client } from 'discordx'
 import 'dotenv/config'
 import { dev, env } from './lib/environment'
-import './jobs'
 
-export const bot = new Client({ intents: [IntentsBitField.Flags.Guilds], silent: false })
+export const bot = new Client({
+    intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers],
+    silent: false
+})
 
 bot.once('ready', async () => {
     await bot.guilds.fetch()
@@ -23,7 +25,7 @@ process.on('unhandledRejection', (error) => {
 })
 
 async function run() {
-    await importx(`${dirname(import.meta.url)}/{events,commands}/**/*.{ts,js}`)
+    await importx(`${dirname(import.meta.url)}/{events,commands,jobs}/**/*.{ts,js}`)
     await bot.login(env.BOT_TOKEN)
 }
 
