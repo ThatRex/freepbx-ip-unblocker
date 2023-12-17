@@ -5,11 +5,11 @@ export const dev = env.NODE_ENV?.toLowerCase() !== 'production'
 
 const envSchema = z.object({
     BOT_TOKEN: z.string(),
-    IPINFO_TOKEN: z.string().optional(),
+    IP_TRUST_TIMEOUT_HOURS: z.string().regex(/\d+/).transform(Number),
     ABUSEIPDB_KEY: z.string().optional(),
-    REJECT_NON_ISP_IPS: z.enum(['false', 'true']).optional().default('true').transform(Boolean),
-    IP_ABUSE_CONFIDENCE_SCORE_REJECTION_PERCENTAGE: z
+    IP_ABUSE_CONFIDENCE_REJECTION_PERCENTAGE: z
         .string()
+        .regex(/\d+/)
         .optional()
         .default('50')
         .transform(Number)
