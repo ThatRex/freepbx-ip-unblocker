@@ -1,30 +1,62 @@
-# FreePBX IP Unblocker
+# FreePBX Manager Bot
 
-## Setup
+_Tested on FreePBX 16_
 
-1. Install [NVM](https://github.com/nvm-sh/nvm).
-2. Execute `nvm install 17`.
-3. Execute `cd /opt`.
-4. Execute `yum install git`.
-5. Execute `git clone https://github.com/ThatRex/freepbx-ip-unblocker`.
-6. Execute `cd freepbx-ip-unblocker/`.
-7. Execute `npm i` to install dependencies.
-8. Execute `npx tsc` to build.
-9.  **Optional:** Execute `nvm run 17 build/main.js` to manually run bot.
-10. Run `nano /etc/systemd/system/ip-unblock-bot.service` and copy the following into the file:
-    ```conf
-    [Unit]
-    Description=IP Unblock Bot
+## Getting Setup
 
-    [Service]
-    ExecStart=/root/.nvm/nvm-exec node /opt/freepbx-ip-unblocker/build/main.js
-    Restart=always
-    User=root
-    Environment="NODE_VERSION=17" "BOT_TOKEN=TOKE_HERE"
-
-    [Install]
-    WantedBy=multi-user.target
+1.  Install Git.
     ```
-11. Execute `systemctl daemon-reload`.
-12. Execute `systemctl start ip-unblock-bot && systemctl status ip-unblock-bot` and ensure no errors are encounterd before continuing.
-13. Execute `systemctl enable ip-unblock-bot` to enable the service.
+    yum install git
+    ```
+2.  Change directory to `/opt/`.
+    ```
+    cd /opt/
+    ```
+3.  Clone this repo.
+    ```
+    git clone https://github.com/ThatRex/freepbx-manager-bot
+    ```
+4.  Run the install script.
+
+    ```
+    bash /freepbx-manager-bot/install.sh -bot_token=BOT_TOKEN -rpv
+    ```
+
+    ```bash
+    -bot_token=X        # Required. Replace X with your discord bot token.
+    -abuseipdb_key=X    # Optional. Replace X with your ipabusedb key.
+    -rpv                # Optional. Removes previous version of the bot.
+    ```
+
+    \* Additional options are available in the `.env` file generated during install.
+
+## Managing The Service
+
+The install script sets up the bot and adds it as a system service. You can manage the service using the `systemctl` CLI. Below are the primary commands you will need.
+
+```bash
+systemctl start freepbx-manager-bot   # Starts Service.
+systemctl stop freepbx-manager-bot    # Stops Service.
+systemctl status freepbx-manager-bot  # Show Service Status. Usefull when something goes wrong.
+systemctl enable freepbx-manager-bot  # Enable Service. When enabled the service will start automaticly.
+systemctl disable freepbx-manager-bot # Disable Service.
+```
+
+## Managing Slash Commands
+
+You may notice by default the staff slash command group is available to everyone. You will need to change this in your server settings. [Find out how here.](https://discord.com/blog/slash-commands-permissions-discord-apps-bots)
+
+## What does the blacklist do & how do I use it?
+
+It adds & removes numbers from `_outbound_blacklist.csv`. It can be found by going to **Admin > Config Edit**. Note: The bot will only create the file when a number is added, you may create it yourself too.
+
+Assuming you don't already have a `trunk-predial-hook` you can do the following to use the blacklist feature. Ensure `_outbound_blacklist.csv` exists then add the following into `extensions_custom.conf`:
+
+```asterisk
+[macro-dialout-trunk-predial-hook]
+exten => s,1,NoOp(macro-dialout-trunk-predial-hook)
+ same => n,NoOp(Checking Blacklist)
+ same => n,Set(BLACKLISTED_NUM=${SHELL(grep ${DIAL_NUMBER} /etc/asterisk/_outbound_blacklist.csv)})
+ same => n,ExecIf($["${BLACKLISTED_NUM}"!=""]?Playback(privacy-this-number-is&privacy-blacklisted))
+ same => n,ExecIf($["${BLACKLISTED_NUM}"!=""]?Hangup())
+```

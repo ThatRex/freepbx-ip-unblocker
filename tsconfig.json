@@ -14,5 +14,9 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true
     },
-    "exclude": ["build", "node_modules"]
+    "exclude": ["build", "node_modules"],
+    "ts-node": {
+        "experimentalSpecifierResolution": "node"
+    },
+    "exclude": ["drizzle.config.ts"]
 }
