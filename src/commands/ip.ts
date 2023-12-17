@@ -1,5 +1,5 @@
 import { exec } from 'child_process'
-import { ApplicationCommandOptionType, CommandInteraction, GuildMember, User } from 'discord.js'
+import { ApplicationCommandOptionType, CommandInteraction, User } from 'discord.js'
 import { Discord, Guard, Slash, SlashGroup, SlashOption } from 'discordx'
 import { IPV4_REGEX } from '../lib/regex'
 import util from 'util'
@@ -7,6 +7,7 @@ import { db, schema } from '../lib/db'
 import { and, asc, eq, sql } from 'drizzle-orm'
 import { ErrorHandler } from '../guards/error-handler'
 import moment from 'moment'
+import { env } from '../lib/environment'
 
 const execPromise = util.promisify(exec)
 
@@ -128,11 +129,20 @@ class IP {
             rejectReason = 'This IP is already trusted.'
         }
 
-        // if (!reject && env.IPINFO_TOKEN) {
-        // }
-
-        // if (!reject && env.ABUSEIPDB_KEY) {
-        // }
+        if (!reject && env.ABUSEIPDB_KEY) {
+            const url = `https://api.abuseipdb.com/api/v2/check?ipAddress=${ip}`
+            const res = await fetch(url, { headers: { Key: env.ABUSEIPDB_KEY } })
+            if (res.ok) {
+                const json = await res.json()
+                if (
+                    json.data.abuseConfidenceScore >=
+                    env.IP_ABUSE_CONFIDENCE_REJECTION_PERCENTAGE
+                ) {
+                    reject = true
+                    rejectReason = `IP abuse confidence score is to high.`
+                }
+            }
+        }
 
         if (reject) {
             await interaction.reply({
