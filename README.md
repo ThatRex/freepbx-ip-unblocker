@@ -19,7 +19,7 @@ _Tested on FreePBX 16_
 4.  Run the install script. (Replace BOT_TOKEN your discord bot token.)
 
     ```
-    bash /freepbx-ip-unblocker/install.sh -bot_token=BOT_TOKEN
+    bash freepbx-ip-unblocker/install.sh -bot_token=BOT_TOKEN
     ```
 
 ## Managing The Service
