@@ -34,7 +34,6 @@ echo Done.
 cd /opt/$BOT_NAME
 
 # install deps & build bot
-$NPM config set python "/usr/bin/python3.6"
 echo Installing Dependenies.
 $NPM install
 echo Building.
