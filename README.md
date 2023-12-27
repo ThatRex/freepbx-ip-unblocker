@@ -34,3 +34,15 @@ systemctl enable freepbx-ip-unblocker  # Enable Service. When enabled the servic
 systemctl disable freepbx-ip-unblocker # Disable Service.
 ```
 
+## Inviting The Bot
+
+1. Go to https://discord.com/developers/applications.
+2. Select your application/bot.
+3. Scroll down to **Application ID** and click **Copy**.
+4. Replace `REPLACE_THIS_WITH_APPLICATION_ID` with the application ID you have copied.
+    ```
+    https://discord.com/api/oauth2/authorize?client_id=
+    REPLACE_THIS_WITH_APPLICATION_ID
+    &permissions=0&scope=bot%20applications.command
+    ```
+5. You now have a bot invite link.
