@@ -50,7 +50,7 @@ Description=$BOT_NAME
 ExecStart=$NODE /opt/$BOT_NAME/build/main.js
 Restart=always
 User=root
-Environment="NODE_VERSION=17" "BOT_TOKEN=$bot_token"
+Environment="BOT_TOKEN=$bot_token"
 
 [Install]
 WantedBy=multi-user.target
